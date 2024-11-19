@@ -1,0 +1,103 @@
+game_map = {
+    'entrance': {
+        'description': 'You are at the entrance of a mysterious cave.',
+        'directions': {'north': 'hallway'},
+        'items': []
+    },
+    'hallway': {
+        'description': 'A long, dimly lit hallway stretches before you.',
+        'directions': {'south': 'entrance', 'east': 'armory', 'north': 'throne_room'},
+        'items': ['torch']
+    },
+    'armory': {
+        'description': 'The armory is filled with ancient weapons.',
+        'directions': {'west': 'hallway'},
+        'items': ['sword']
+    },
+    'throne_room': {
+        'description': 'You have entered the grand throne room.',
+        'directions': {'south': 'hallway'},
+        'items': [],
+        'enemy': 'dragon'
+    }
+}
+
+class Player:
+    def __init__(self):
+        self.location = 'entrance'
+        self.inventory = []
+
+    def move(self, direction):
+        current_room = game_map[self.location]
+        if direction in current_room['directions']:
+            self.location = current_room['directions'][direction]
+            print(f"\nYou move {direction} to the {self.location}.")
+            self.describe_current_location()
+        else:
+            print("You can't go that way.")
+
+    def describe_current_location(self):
+        current_room = game_map[self.location]
+        print(current_room['description'])
+        if current_room['items']:
+            print(f"You see the following items: {', '.join(current_room['items'])}")
+
+    def take_item(self, item_name):
+        current_room = game_map[self.location]
+        if item_name in current_room['items']:
+            self.inventory.append(item_name)
+            current_room['items'].remove(item_name)
+            print(f"You picked up the {item_name}.")
+        else:
+            print(f"There is no {item_name} here.")
+
+    def show_inventory(self):
+        if self.inventory:
+            print(f"You are carrying: {', '.join(self.inventory)}")
+        else:
+            print("Your inventory is empty.")
+
+def check_special_events(player):
+    current_room = game_map[player.location]
+    if 'enemy' in current_room:
+        if current_room['enemy'] == 'dragon':
+            if 'sword' in player.inventory:
+                print("\nYou slay the dragon with your sword! You win!")
+                return True
+            else:
+                print("\nA dragon appears and defeats you. Game over.")
+                return True
+    return False
+
+def play_game():
+    player = Player()
+    player.describe_current_location()
+
+    while True:
+        if check_special_events(player):
+            break
+
+        command = input("\nWhat do you do? ").lower().split()
+        if not command:
+            continue
+
+        if command[0] in ['go', 'move']:
+            if len(command) > 1:
+                player.move(command[1])
+            else:
+                print("Go where?")
+        elif command[0] in ['take', 'get']:
+            if len(command) > 1:
+                player.take_item(' '.join(command[1:]))
+            else:
+                print("Take what?")
+        elif command[0] == 'inventory':
+            player.show_inventory()
+        elif command[0] in ['quit', 'exit']:
+            print("Thanks for playing!")
+            break
+        else:
+            print("Invalid command.")
+
+if __name__ == "__main__":
+    play_game()
