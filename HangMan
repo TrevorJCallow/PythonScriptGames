@@ -1,0 +1,174 @@
+import random
+import string
+
+HANGMAN_PICS = [
+    """
+     +---+
+         |
+         |
+         |
+        ===""",
+    """
+     +---+
+     O   |
+         |
+         |
+        ===""",
+    """
+     +---+
+     O   |
+     |   |
+         |
+        ===""",
+    """
+     +---+
+     O   |
+    /|   |
+         |
+        ===""",
+    """
+     +---+
+     O   |
+    /|\\  |
+         |
+        ===""",
+    """
+     +---+
+     O   |
+    /|\\  |
+    /    |
+        ===""",
+    """
+     +---+
+     O   |
+    /|\\  |
+    / \\  |
+        ==="""
+]
+
+def get_word_list():
+    # Load words from a file or define a large list
+    try:
+        with open('words.txt', 'r') as f:
+            words = f.read().split()
+    except FileNotFoundError:
+        # Fallback word list
+        words = [
+            'python', 'hangman', 'programming', 'developer', 'algorithm',
+            'function', 'variable', 'inheritance', 'polymorphism', 'encapsulation',
+            'abstraction', 'debugging', 'syntax', 'exception', 'iteration',
+            'recursion', 'binary', 'hexadecimal', 'compiler', 'interpreter',
+            'multithreading', 'asynchronous', 'synchronous', 'database', 'encryption',
+            'decryption', 'network', 'protocol', 'interface', 'virtualization',
+            'containerization', 'microservices', 'orchestration', 'scalability', 'performance',
+            'optimization', 'data', 'structure', 'algorithm', 'efficiency', 'complexity'
+        ]
+    return words
+
+def choose_word(words, difficulty):
+    # Choose a word based on difficulty
+    easy = [word for word in words if len(word) <= 5]
+    medium = [word for word in words if 6 <= len(word) <= 8]
+    hard = [word for word in words if len(word) > 8]
+
+    if difficulty == '1':
+        return random.choice(easy)
+    elif difficulty == '2':
+        return random.choice(medium)
+    else:
+        return random.choice(hard)
+
+def get_hint(word, used_letters):
+    # Provide a hint by revealing an unguessed letter
+    unguessed_letters = [letter for letter in set(word) if letter not in used_letters]
+    if unguessed_letters:
+        return random.choice(unguessed_letters)
+    else:
+        return None
+
+def hangman():
+    words = get_word_list()
+    alphabet = set(string.ascii_lowercase)
+    used_letters = set()
+    incorrect_guesses = 0
+
+    print("Welcome to Hangman!")
+    print("Choose a difficulty level:")
+    print("1. Easy (Words up to 5 letters, 8 lives)")
+    print("2. Medium (Words 6-8 letters, 6 lives)")
+    print("3. Hard (Words longer than 8 letters, 4 lives)")
+
+    while True:
+        difficulty = input("Enter difficulty level (1/2/3): ")
+        if difficulty in ['1', '2', '3']:
+            break
+        else:
+            print("Invalid input. Please enter 1, 2, or 3.")
+
+    if difficulty == '1':
+        lives = 8
+    elif difficulty == '2':
+        lives = 6
+    else:
+        lives = 4
+
+    word = choose_word(words, difficulty)
+    word_letters = set(word)
+    hint_used = False
+
+    print(f"\nYou have {lives} lives to guess the word.")
+
+    # Game loop
+    while len(word_letters) > 0 and lives > 0:
+        # Display current hangman state
+        print(HANGMAN_PICS[incorrect_guesses])
+        print(f"Lives left: {lives}")
+        print("Used letters: ", ' '.join(sorted(used_letters)))
+
+        # Display the word with guessed letters revealed
+        word_display = [letter if letter in used_letters else '_' for letter in word]
+        print("Current word: ", ' '.join(word_display))
+
+        # Offer hint after 2 incorrect guesses
+        if incorrect_guesses >= 2 and not hint_used:
+            use_hint = input("Would you like a hint? (y/n): ").lower()
+            if use_hint == 'y':
+                hint = get_hint(word, used_letters)
+                if hint:
+                    print(f"Hint: The word contains the letter '{hint}'.")
+                    hint_used = True
+                else:
+                    print("No hints available.")
+            elif use_hint != 'n':
+                print("Invalid input. Continuing without a hint.")
+
+        # Get user input
+        guess = input("Guess a letter: ").lower()
+
+        # Validate input
+        if len(guess) != 1 or guess not in alphabet:
+            print("Invalid input. Please enter a single alphabetical character.")
+            continue
+        if guess in used_letters:
+            print("You've already guessed that letter. Try again.")
+            continue
+
+        used_letters.add(guess)
+
+        if guess in word_letters:
+            word_letters.remove(guess)
+            print(f"Good job! '{guess}' is in the word.")
+        else:
+            lives -= 1
+            incorrect_guesses = min(incorrect_guesses + 1, len(HANGMAN_PICS) - 1)
+            print(f"Sorry, '{guess}' is not in the word.")
+
+    # End of game
+    if lives == 0:
+        print(HANGMAN_PICS[-1])
+        print(f"\nYou ran out of lives. The word was '{word}'. Better luck next time!")
+    else:
+        print(f"\nCongratulations! You guessed the word '{word}' correctly!")
+
+if __name__ == "__main__":
+    hangman()
